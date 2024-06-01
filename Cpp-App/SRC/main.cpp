@@ -12,8 +12,10 @@ enum class Type
 {
     VOLTAGE_SUPPLY,
     RESISTOR,
+    CURRENT_SOURCE,
+    DEPENDENT_VOLTAGE_SOURCE,
+    DEPENDENT_CURRENT_SOURCE,
 };
-
 
 enum class properties
 {
@@ -151,12 +153,32 @@ public:
     int id() const { return _volt_source_id; }
 };
 
+class CurrentSource : public Element
+{
+    double _current;  // Current value
+    int _current_source_id;
+
+public:
+    // Constructor that initializes the current source with its name and current value (nodes can be set later)
+    CurrentSource(std::string name, double current, int id)
+        : Element(Type::CURRENT_SOURCE, name, current), _current(current), _current_source_id(id)
+    {
+    }
+
+    // Getter for current value
+    double current() const { return _current; }
+
+    int id() const { return _current_source_id; }
+};
+
 class Circuit
 {
     std::vector<Node *> _nodes;
     std::vector<Element *> _elements;
     std::vector<VoltageSource *> _voltage_sources;
+    std::vector<CurrentSource *> _current_sources;
     size_t _volt_source_id;
+    size_t _current_source_id;
     size_t _node_id;
     Node *_ground;
 
@@ -304,6 +326,56 @@ public:
         else
         {
             std::cerr << "Error: Element " << name << " is not a voltage source\n";
+        }
+    }
+
+    //We will add current source similar to voltage source
+    void add_c_source(std::string name, std::string node_name, double value)
+    {
+        Node *node = get_node(node_name);
+        // Node should be already present
+        if (node == nullptr)
+        {
+            std::cerr << "Node not found\n";
+            return;
+        }
+        // Check if the current source is already present or not
+        Element *c_source = get_element(name);
+        if (c_source == nullptr)
+        {
+            // If current source is not present, create a new current source
+            c_source = new CurrentSource(name, value, _volt_source_id++);
+            if (value < 0)
+            {
+                c_source->set_neg_node(node);
+            }
+            else
+            {
+                c_source->set_pos_node(node);
+            }
+            _elements.push_back(c_source);
+            _current_sources.push_back(static_cast<CurrentSource *>(c_source));
+        }
+        else if (c_source->type() == Type::CURRENT_SOURCE)
+        {
+            // If current source is present and its type is CURRENT_SOURCE
+            // If pos node is set and value is -ve, set neg node; if neg node is set and value is +ve, set pos node
+            if (c_source->get_pos_node() != nullptr && c_source->get_neg_node() == nullptr && value < 0)
+            {
+                c_source->set_neg_node(node);
+            }
+            else if (c_source->get_pos_node() == nullptr && c_source->get_neg_node() != nullptr && value > 0)
+            {
+                c_source->set_pos_node(node);
+            }
+            else
+            {
+                std::cerr << "Error: Current source " << name << " already has both nodes assigned or value mismatch\n";
+            }
+        }
+        else
+        {
+            std::cerr << "Error: Element " << name << " is not a current source\n";
         }
     }
 
@@ -493,6 +565,7 @@ private:
         }
     }
 
+    //Top n elements of Z matrix will have algabraic sum of currents of all nodes except ground node and bottom m elements will have voltage of all voltage sources
     void fill_vector_Z(Eigen::VectorXd &Z, size_t num_nodes, size_t num_voltage_sources)
     {
         Z = Eigen::VectorXd::Zero(num_nodes + num_voltage_sources);
@@ -500,6 +573,21 @@ private:
         {
             VoltageSource *v_source = static_cast<VoltageSource *>(voltage_source);
             Z(num_nodes + v_source->id()) = v_source->voltage();
+        }
+        for (auto node : _nodes)
+        {
+            if (!node->is_ground())
+            {
+                double sum = 0;
+                for (auto elem : node->elements())
+                {
+                    if (elem->get_other_node(node) == node && elem->type() == Type::CURRENT_SOURCE)
+                    {
+                        sum = sum + elem->value();
+                    }
+                }
+                Z(node->id()) = sum;
+            }
         }
     }
 
@@ -559,7 +647,7 @@ private:
     }
 };
 
-//NOTE: Should we accept both nodes once while entering elements?
+//DOUBT: Should we accept both nodes once while entering elements?
 //TODO: Add current sources and dependent sources
 //TODO: Add more error handling, optimize code
 //TODO: Circuit should be read from txt file, design a parser and input format or a json parser and then use that to create circuit
