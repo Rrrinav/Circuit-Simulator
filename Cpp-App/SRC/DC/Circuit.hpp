@@ -57,7 +57,7 @@ public:
      * @param name Name of the voltage source
      */
     VoltageSource *get_voltage_source(std::string name);
-    
+
     /*
      * @brief Add a resistor to the circuit.
      * @param name Name of the resistor.
@@ -82,10 +82,9 @@ public:
      */
     void add_c_source(std::string name, std::string node_name, double value);
 
-
     //We will set neg_node of last voltage source as ground node and set its voltage to 0 if no voltage_source is present
     //we will set the neg of current source as ground and set voltage to 0
-    
+
     /*
      * @brief Set ground node
      */
@@ -157,47 +156,20 @@ public:
     I (n   * 1) is current of all nodes (current sources to those nodes) except ground node, 0 when no current source
     E (m * 1) is voltage of all voltage sources to those nodes 
     */
-    void solve()
-    {
-        size_t num_nodes = _nodes.size() - 1;  //Removing ground node
-        size_t num_voltage_sources = _voltage_sources.size();
-        Eigen::MatrixXd A;
-        Eigen::VectorXd X;
-        Eigen::VectorXd Z;
 
-        set_ground();
-
-        fill_matrix_A(A, num_nodes, num_voltage_sources);
-        //Print A matrix
-        std::cout << "A matrix\n";
-        for (size_t i = 0; i < num_nodes + num_voltage_sources; i++)
-        {
-            for (size_t j = 0; j < num_nodes + num_voltage_sources; j++)
-            {
-                std::cout << A(i, j) << "     ";
-            }
-            std::cout << "\n";
-        }
-        //We don't need to fill X as we are solving for it
-        X = Eigen::VectorXd::Zero(num_nodes + num_voltage_sources);
-        fill_vector_Z(Z, num_nodes, num_voltage_sources);
-        std::cout << "Z matrix\n";
-
-        for (size_t i = 0; i < num_nodes + num_voltage_sources; i++)
-        {
-            std::cout << Z(i) << " ";
-        }
-        if (solve_for_x(A, X, Z))
-        {
-            std::cout << "Solution found\n";
-        }
-        else
-        {
-            std::cerr << "Solution not found\n";
-        }
-    }
+    /*
+     * @brief Solve the circuit
+     */
+    void solve();
 
 private:
+
+    /*
+     * @brief Fill the matrix A
+     * @param A Matrix A
+     * @param num_nodes Number of nodes
+     * @param num_voltage_sources Number of voltage sources
+     */
     void fill_matrix_A(Eigen::MatrixXd &A, size_t num_nodes, size_t num_voltage_sources)
     {
         A = Eigen::MatrixXd::Zero(num_nodes + num_voltage_sources, num_nodes + num_voltage_sources);
@@ -361,3 +333,43 @@ private:
         return num;
     }
 };
+
+void Circuit::solve()
+{
+    size_t num_nodes = _nodes.size() - 1;  //Removing ground node
+    size_t num_voltage_sources = _voltage_sources.size();
+    Eigen::MatrixXd A;
+    Eigen::VectorXd X;
+    Eigen::VectorXd Z;
+
+    set_ground();
+
+    fill_matrix_A(A, num_nodes, num_voltage_sources);
+    //Print A matrix
+    std::cout << "A matrix\n";
+    for (size_t i = 0; i < num_nodes + num_voltage_sources; i++)
+    {
+        for (size_t j = 0; j < num_nodes + num_voltage_sources; j++)
+        {
+            std::cout << A(i, j) << "     ";
+        }
+        std::cout << "\n";
+    }
+    //We don't need to fill X as we are solving for it
+    X = Eigen::VectorXd::Zero(num_nodes + num_voltage_sources);
+    fill_vector_Z(Z, num_nodes, num_voltage_sources);
+    std::cout << "Z matrix\n";
+
+    for (size_t i = 0; i < num_nodes + num_voltage_sources; i++)
+    {
+        std::cout << Z(i) << " ";
+    }
+    if (solve_for_x(A, X, Z))
+    {
+        std::cout << "Solution found\n";
+    }
+    else
+    {
+        std::cerr << "Solution not found\n";
+    }
+}
