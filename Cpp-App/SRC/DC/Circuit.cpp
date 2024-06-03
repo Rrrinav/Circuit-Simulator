@@ -214,3 +214,43 @@ Node *Circuit::set_ground()
     _ground = v_source->get_neg_node();
     return _ground;
 }
+
+void Circuit::solve()
+{
+    size_t num_nodes = _nodes.size() - 1;  //Removing ground node
+    size_t num_voltage_sources = _voltage_sources.size();
+    Eigen::MatrixXd A;
+    Eigen::VectorXd X;
+    Eigen::VectorXd Z;
+
+    set_ground();
+
+    fill_matrix_A(A, num_nodes, num_voltage_sources);
+    //Print A matrix
+    std::cout << "A matrix\n";
+    for (size_t i = 0; i < num_nodes + num_voltage_sources; i++)
+    {
+        for (size_t j = 0; j < num_nodes + num_voltage_sources; j++)
+        {
+            std::cout << A(i, j) << "     ";
+        }
+        std::cout << "\n";
+    }
+    //We don't need to fill X as we are solving for it
+    X = Eigen::VectorXd::Zero(num_nodes + num_voltage_sources);
+    fill_vector_Z(Z, num_nodes, num_voltage_sources);
+    std::cout << "Z matrix\n";
+
+    for (size_t i = 0; i < num_nodes + num_voltage_sources; i++)
+    {
+        std::cout << Z(i) << " ";
+    }
+    if (solve_for_x(A, X, Z))
+    {
+        std::cout << "Solution found\n";
+    }
+    else
+    {
+        std::cerr << "Solution not found\n";
+    }
+}

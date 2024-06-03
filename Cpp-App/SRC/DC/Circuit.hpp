@@ -163,7 +163,6 @@ public:
     void solve();
 
 private:
-
     /*
      * @brief Fill the matrix A
      * @param A Matrix A
@@ -243,6 +242,13 @@ private:
     }
 
     //Top n elements of Z matrix will have algabraic sum of currents of all nodes except ground node and bottom m elements will have voltage of all voltage sources
+
+    /*
+    * @brief Fill the vector Z
+    * @param Z Vector Z
+    * @param num_nodes Number of nodes
+    * @param num_voltage_sources Number of voltage sources
+    */
     void fill_vector_Z(Eigen::VectorXd &Z, size_t num_nodes, size_t num_voltage_sources)
     {
         Z = Eigen::VectorXd::Zero(num_nodes + num_voltage_sources);
@@ -280,6 +286,14 @@ private:
 
     //We have set of simultaneous equations to solve for X
     //We will just use Eigen to solve AX = Z and fill resultant X values to nodes and voltage sources
+   
+    /*
+    * @brief Solve for X
+    * @param A Matrix A
+    * @param X Vector X
+    * @param Z Vector Z
+    * @return True if solution is found, false otherwise
+    */
     bool solve_for_x(Eigen::MatrixXd &A, Eigen::VectorXd &X, Eigen::VectorXd &Z)
     {
         X = A.colPivHouseholderQr().solve(Z);
@@ -333,43 +347,3 @@ private:
         return num;
     }
 };
-
-void Circuit::solve()
-{
-    size_t num_nodes = _nodes.size() - 1;  //Removing ground node
-    size_t num_voltage_sources = _voltage_sources.size();
-    Eigen::MatrixXd A;
-    Eigen::VectorXd X;
-    Eigen::VectorXd Z;
-
-    set_ground();
-
-    fill_matrix_A(A, num_nodes, num_voltage_sources);
-    //Print A matrix
-    std::cout << "A matrix\n";
-    for (size_t i = 0; i < num_nodes + num_voltage_sources; i++)
-    {
-        for (size_t j = 0; j < num_nodes + num_voltage_sources; j++)
-        {
-            std::cout << A(i, j) << "     ";
-        }
-        std::cout << "\n";
-    }
-    //We don't need to fill X as we are solving for it
-    X = Eigen::VectorXd::Zero(num_nodes + num_voltage_sources);
-    fill_vector_Z(Z, num_nodes, num_voltage_sources);
-    std::cout << "Z matrix\n";
-
-    for (size_t i = 0; i < num_nodes + num_voltage_sources; i++)
-    {
-        std::cout << Z(i) << " ";
-    }
-    if (solve_for_x(A, X, Z))
-    {
-        std::cout << "Solution found\n";
-    }
-    else
-    {
-        std::cerr << "Solution not found\n";
-    }
-}
