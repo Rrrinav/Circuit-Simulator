@@ -1,5 +1,10 @@
 #include "Circuit.hpp"
 
+#include "../../Include/nlohmann/json.hpp"
+using json = nlohmann::json;
+
+#include <fstream>
+
 //Constructor for Circuit
 Circuit::Circuit() : _volt_source_id(0), _node_id(0) {}
 
@@ -189,26 +194,17 @@ void Circuit::solve()
 
   for (int i = 0; i < A.rows(); i++)
   {
-    for (int j = 0; j < A.cols(); j++)
-    {
-      std::cout << A(i, j) << " ";
-    }
+    for (int j = 0; j < A.cols(); j++) std::cout << A(i, j) << " ";
     std::cout << std::endl;
   }
 
   //We don't need to fill X as we are solving for it
   X = Eigen::VectorXd::Zero(num_nodes + num_voltage_sources);
   fill_vector_Z(Z, num_nodes, num_voltage_sources);
-  
 
   std::cout << "\n VECTOR Z: \n";
 
-  for (int i = 0; i < Z.size(); i++)
-  {
-    std::cout << Z(i) << " ";
-  }
-
-
+  for (int i = 0; i < Z.size(); i++) std::cout << Z(i) << " ";
 
   if (solve_for_x(A, X, Z))
     std::cout << "Solution found\n";
@@ -216,7 +212,50 @@ void Circuit::solve()
     std::cerr << "Solution not found\n";
 }
 
-// TODO: Potential improvements according to Claude: 
+Circuit Circuit::create_from_json(const std::string &file_path)
+{
+  Circuit circuit;
+
+  std::ifstream f(file_path);
+  json Json = json::parse(f);
+  auto nodes = Json["nodes"];
+
+  for (auto &node : nodes)
+  {
+    std::string name = node["name"];
+    circuit.add_node(name);
+  }
+
+  auto elements = Json["elements"];
+  for (auto &element : elements)
+  {
+    std::string name = element["name"];
+    std::string type = element["type"];
+    double value = element["value"];
+    std::string posNode = element["posNode"];
+    std::string negNode = element["negNode"];
+
+    if (type == "VOLTAGE_SUPPLY")
+    {
+      circuit.add_v_source(name, posNode, value);
+      circuit.add_v_source(name, negNode, -value);
+    }
+    else if (type == "RESISTOR")
+    {
+      circuit.add_resistor(name, posNode, value);
+      circuit.add_resistor(name, negNode, value);
+    }
+    else if (type == "CURRENT_SUPPLY")
+    {
+      circuit.add_c_source(name, posNode, value);
+      circuit.add_c_source(name, negNode, -value);
+    }
+  }
+
+  return circuit;
+}
+
+// TODO: Potential improvements according to Claude:
 // [ Node addition ]: There's no check for duplicate node names. You might want to add this to prevent errors.
 // [ Element addition ]: The code checks for existing elements, but it might be beneficial to add more robust error handling for cases where an element is partially defined.
 // [ Ground node ]: The set_ground() function chooses the ground node based on voltage sources. You might want to allow manual ground node selection.

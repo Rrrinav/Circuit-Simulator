@@ -8,18 +8,7 @@
 
 int main()
 {
-  Circuit c;
-  c.add_node("N1");
-  c.add_node("N2");
-  c.add_node("N3");
-  c.add_v_source("V1", "N1", 12);
-  c.add_v_source("V1", "N3", -12);
-  c.add_c_source("I1", "N2", 2);
-  c.add_c_source("I1", "N3", -2);
-  c.add_resistor("R1", "N1", 4);
-  c.add_resistor("R1", "N2", 4);
-  c.add_resistor("R2", "N2", 6);
-  c.add_resistor("R2", "N3", 6);
+  Circuit c = Circuit::create_from_json("./SRC/Circuit.json");
   c.solve();
   c.check();
 }

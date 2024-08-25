@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -89,6 +91,9 @@ public:
      * @brief Set ground node
      */
   Node *set_ground();
+
+  static Circuit create_from_json(const std::string &file_path);
+
 
   //Temporary function to check if all nodes and resistors are connected properly
   void check()

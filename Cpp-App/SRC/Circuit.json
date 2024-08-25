@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    {
+      "name": "N1",
+      "isGround": false
+    },
+    {
+      "name": "N2",
+      "isGround": false
+    }
+  ],
+  "elements": [
+    {
+      "name": "V1",
+      "type": "VOLTAGE_SUPPLY",
+      "value": 10,
+      "posNode": "N1",
+      "negNode": "N2"
+    },
+    {
+      "name": "R1",
+      "type": "RESISTOR",
+      "value": 1,
+      "posNode": "N1",
+      "negNode": "N2"
+    }
+  ]
+}

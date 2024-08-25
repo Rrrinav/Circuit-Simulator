@@ -1,10 +1,13 @@
 cc := g++
-flags := -Wall -g -std=c++17 -Wextra -Wpedantic -Werror
+flags := -Wall -g -std=c++20 -Wextra -Wpedantic -Werror -ggdb
 Linker := -lm
 Includes := -I./Include/
 Libs := -L./Libs/
 BuildDir := ./build
 DcDir := ./SRC/DC
+
+debug: $(BuildDir)/main
+	gdb $(BuildDir)/main
 
 main: $(BuildDir)/main
 
@@ -24,7 +27,7 @@ $(BuildDir)/main.o: ./SRC/main.cpp
 	mkdir -p $(BuildDir)
 	$(cc) $(flags) $(Includes) $(Libs) -c ./SRC/main.cpp -o $(BuildDir)/main.o
 
-$(BuildDir)/main: $(BuildDir)/main.o $(BuildDir)/Circuit.o $(BuildDir)/Element.o $(BuildDir)/Node.o
+$(BuildDir)/main: $(BuildDir)/main.o $(BuildDir)/Circuit.o $(BuildDir)/Element.o $(BuildDir)/Node.o 
 	$(cc) $(flags) $(Includes) $(Libs) $(BuildDir)/main.o $(BuildDir)/Circuit.o $(BuildDir)/Element.o $(BuildDir)/Node.o $(Linker) -o $(BuildDir)/main
 
 .PHONY: clean
