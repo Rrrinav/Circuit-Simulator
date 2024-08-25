@@ -114,7 +114,7 @@ public:
                 << " Neg Node: " << element->get_neg_node()->name() << "\n";
     }
 
-    std::cout << "=================================================Voltage Sources: \n============================";
+    std::cout << "=======================================Voltage Sources: ============================\n";
     for (auto element : _voltage_sources)
     {
       if (element->get_neg_node() == nullptr || element->get_pos_node() == nullptr)
@@ -194,13 +194,13 @@ private:
           //to the same node, we will calculate cumulative conductance and solve them respectively
           //We also need to make sure we don't consider the same resistor twice since this is diagonal node and we will go to a nodw twice
 
-          A(node->id(), node->id()) += 1 / conductance;
+          A(node->id(), node->id()) += conductance;
 
           //Off-diagonal elements
           if (!other_node->is_ground())
           {
             if (common_resistors == 1)
-              A(node->id(), other_node->id()) -= 1 / conductance;
+              A(node->id(), other_node->id()) -= conductance;
             else
               A(node->id(), other_node->id()) = -1 / solve_parallel(node, other_node);
           }
@@ -254,8 +254,7 @@ private:
               sum += c_source->value();
             else
               sum -= c_source->value();
-          }
-          std::cout << "Sum: " << sum << "\n";
+          } 
           Z(node->id()) = sum;
         }
       }
@@ -275,32 +274,32 @@ private:
   bool solve_for_x(Eigen::MatrixXd &A, Eigen::VectorXd &X, Eigen::VectorXd &Z)
   {
     X = A.colPivHouseholderQr().solve(Z);
+
     std::cout << '\n';
     for (int i = 0; i < X.size(); i++) std::cout << X(i) << " ";
+
     size_t num_nodes = _nodes.size() - 1;
+
     for (auto node : _nodes)
       if (!node->is_ground())
         node->set_voltage(X(node->id()));
+
     for (auto voltage_source : _voltage_sources)
     {
       VoltageSource *v_source = static_cast<VoltageSource *>(voltage_source);
       v_source->set_current(X(num_nodes + v_source->id()));
     }
+
     return true;
   }
 
   static double solve_parallel(Node *node_1, Node *node_2)
   {
     double sum = 0;
+
     for (auto elem : node_1->elements())
-    {
       if (elem->get_other_node(node_1) == node_2 && elem->type() == Type::RESISTOR)
-      {
-        std::cout << "elem: " << elem->name() << '\n';
         sum = sum + (1 / elem->value());
-      }
-    }
-    std::cout << "Sum: " << sum << "\n";
 
     return 1 / sum;
   }

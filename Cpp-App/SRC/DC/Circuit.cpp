@@ -184,12 +184,44 @@ void Circuit::solve()
   set_ground();
 
   fill_matrix_A(A, num_nodes, num_voltage_sources);
+
+  std::cout << "\n MATRIX A: \n";
+
+  for (int i = 0; i < A.rows(); i++)
+  {
+    for (int j = 0; j < A.cols(); j++)
+    {
+      std::cout << A(i, j) << " ";
+    }
+    std::cout << std::endl;
+  }
+
   //We don't need to fill X as we are solving for it
   X = Eigen::VectorXd::Zero(num_nodes + num_voltage_sources);
   fill_vector_Z(Z, num_nodes, num_voltage_sources);
+  
+
+  std::cout << "\n VECTOR Z: \n";
+
+  for (int i = 0; i < Z.size(); i++)
+  {
+    std::cout << Z(i) << " ";
+  }
+
+
 
   if (solve_for_x(A, X, Z))
     std::cout << "Solution found\n";
   else
     std::cerr << "Solution not found\n";
 }
+
+// TODO: Potential improvements according to Claude: 
+// [ Node addition ]: There's no check for duplicate node names. You might want to add this to prevent errors.
+// [ Element addition ]: The code checks for existing elements, but it might be beneficial to add more robust error handling for cases where an element is partially defined.
+// [ Ground node ]: The set_ground() function chooses the ground node based on voltage sources. You might want to allow manual ground node selection.
+// [ Error handling ]: While there are some error messages, you might want to consider using exceptions for more robust error handling.
+// [ Memory management ]: The class uses raw pointers and manual memory management. Consider using smart pointers to prevent memory leaks.
+// [ Const correctness ]: Some methods like get_node(), get_element(), etc., could be marked as const.
+// [ Input validation ]: There's limited input validation. You might want to add more checks, especially for negative resistances or invalid node names.
+// [ Circuit consistency ]: There's no check to ensure the circuit is complete and solvable before attempting to solve it.
