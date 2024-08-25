@@ -83,7 +83,7 @@ Main class that represents the entire circuit. It contains:
 
 ### Modified Nodal Analysis (MNA)
 
-  [Primary source](/Cpp-App/INFO.md)
+[Primary source](/Cpp-App/INFO.md)
 
 The solver uses MNA, which is an extension of Nodal Analysis that can handle voltage sources and current sources. The basic steps are:
 
@@ -143,18 +143,20 @@ int main()
 }
 ```
 
-
 ## Compilation
 
 Use the provided Makefile to compile the project:
+
 ```bash
 make clean
 make main
 make run
 ```
+
 This will generate an executable in the project root directory.
 
 ## Contributing
+
 Contributions are welcome! Here are some areas where you can contribute:
 
 Implement AC circuit analysis
@@ -175,3 +177,8 @@ Frequency response analysis
 Support for non-linear circuit elements
 Parallel processing for large circuit matrices
 Integration with SPICE models for more accurate device modeling
+
+## Dependencies
+
+- Eigen library
+- Nlohmann Json library
