@@ -1,1 +1,3 @@
 Cpp-App/build/
+*build*/
+*build/*
