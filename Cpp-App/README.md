@@ -83,7 +83,7 @@ Main class that represents the entire circuit. It contains:
 
 ### Modified Nodal Analysis (MNA)
 
-  [Primary source](INFO.md)
+  [Primary source](/Cpp-App/INFO.md)
 
 The solver uses MNA, which is an extension of Nodal Analysis that can handle voltage sources and current sources. The basic steps are:
 
