@@ -8,19 +8,18 @@
 
 int main()
 {
-    Circuit c;
+  Circuit c;
 
-    c.add_node("N1");
-    c.add_node("N2");
-    c.add_node("N3");
+  c.add_node("N1");
+  c.add_node("N2");
 
-    c.add_c_source("C1", "N1", 1);
-    c.add_c_source("C1", "N2", -1);
+  c.add_v_source("V1", "N1", 10);
+  c.add_v_source("V1", "N2", -10);
 
-    c.add_resistor("R1", "N1", 1);
-    c.add_resistor("R1", "N2", 1);
-    c.add_resistor("R2", "N2", 1);
-    c.add_resistor("R2", "N3", 1);
-    c.solve();
-    c.check();
+  c.add_resistor("R1", "N1", 1);
+  c.add_resistor("R1", "N2", 1);
+  c.add_resistor("R2", "N1", 1);
+  c.add_resistor("R2", "N2", 1);
+  c.solve();
+  c.check();
 }

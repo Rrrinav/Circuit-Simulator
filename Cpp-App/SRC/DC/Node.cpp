@@ -9,8 +9,8 @@ Node::~Node() {}
 // Function to add an element to the node
 void Node::add_element(Element *element)
 {
-    _elements.push_back(element);
-    _num_elements++;
+  _elements.push_back(element);
+  _num_elements++;
 }
 
 // Getter for the number of elements

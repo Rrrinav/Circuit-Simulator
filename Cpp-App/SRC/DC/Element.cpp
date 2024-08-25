@@ -12,31 +12,27 @@ std::string Element::name() const { return _name; }
 
 void Element::set_pos_node(Node *node)
 {
-    _pos_node = node;
-    _pos_node->add_element(this);
+  _pos_node = node;
+  _pos_node->add_element(this);
 }
 
 Node *Element::get_pos_node() const { return _pos_node; }
 
 void Element::set_neg_node(Node *node)
 {
-    _neg_node = node;
-    _neg_node->add_element(this);
+  _neg_node = node;
+  _neg_node->add_element(this);
 }
 
 Node *Element::get_neg_node() const { return _neg_node; }
 
 Node *Element::get_other_node(Node *node) const
 {
-    if (_pos_node == node)
-    {
-        return _neg_node;
-    }
-    else if (_neg_node == node)
-    {
-        return _pos_node;
-    }
-    return nullptr;
+  if (_pos_node == node)
+    return _neg_node;
+  else if (_neg_node == node)
+    return _pos_node;
+  return nullptr;
 }
 
 Type Element::type() const { return _type; }
@@ -53,7 +49,7 @@ void Resistor::set_resistance(double resistance) { _resistance = resistance; }
 
 double Resistor::get_current() const
 {
-    return (get_pos_node() && get_neg_node()) ? -1 * ((get_pos_node()->voltage() - get_neg_node()->voltage()) / _resistance) : 0.0;
+  return (get_pos_node() && get_neg_node()) ? -1 * ((get_pos_node()->voltage() - get_neg_node()->voltage()) / _resistance) : 0.0;
 }
 
 // VoltageSource class definitions
