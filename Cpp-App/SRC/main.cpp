@@ -1,10 +1,10 @@
 // Solving circuits using MODIFIED NODAL ANALYSIS (MNA)
 #include "./DC/Circuit.hpp"
 
-// DOUBT: Should we accept both nodes once while entering elements? Answer: Yes or no
+// TODO: Add both nodes at once
+// DOUBT: I am not sure if I should add both nodes at once or not but we'll see after developing frontend
 // TODO: Add current sources and dependent sources
-// TODO: Add more error handling, optimize code
-// TODO: Circuit should be read from txt file, design a parser and input format or a json parser and then use that to create circuit
+// TODO: Add more error handling, optimize code and add more error messages
 
 int main()
 {
