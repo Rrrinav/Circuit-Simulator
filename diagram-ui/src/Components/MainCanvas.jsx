@@ -53,7 +53,7 @@ const MainCanvas = ({ gridSize = 50 }) => {
 
     const handleWheel = (e) => {
       e.preventDefault();
-      const zoomFactor = 1.1;
+      const zoomFactor = 1.01;
       const newScale =
         e.deltaY < 0
           ? scaleRef.current * zoomFactor
@@ -69,37 +69,22 @@ const MainCanvas = ({ gridSize = 50 }) => {
       drawGrid();
     };
 
-    const handleMouseDown = (e) => {
-      const startX = e.clientX;
-      const startY = e.clientY;
-
-      const onMouseMove = (moveEvent) => {
-        const dx = moveEvent.clientX - startX;
-        const dy = moveEvent.clientY - startY;
-        panOffsetRef.current.x += dx;
-        panOffsetRef.current.y += dy;
-        drawGrid();
-      };
-
-      const onMouseUp = () => {
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
-      };
-
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
-    };
-
     window.addEventListener("resize", updateCanvasSize);
     canvas.addEventListener("wheel", handleWheel);
-    canvas.addEventListener("mousedown", handleMouseDown);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === " ") {
+        panOffsetRef.current = { x: 0, y: 0 };
+        scaleRef.current = 1;
+        drawGrid();
+      }
+    });
 
     updateCanvasSize();
 
     return () => {
       window.removeEventListener("resize", updateCanvasSize);
-      canvas.removeEventListener("wheel", handleWheel);
-      canvas.removeEventListener("mousedown", handleMouseDown);
+      canvas.removeEventListener("wheel", handleWheel); 
     };
   }, [gridSize]);
 
