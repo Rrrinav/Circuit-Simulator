@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
-import switch_black from "../assets/switch_black.svg"; // Assuming corrected SVG filenames
-import switch_red from "../assets/switch_red.svg";
+import fuse_def from "../assets/fuse_def.svg"; // Assuming corrected SVG filenames
+import fuse_sel from "../assets/fuse_sel.svg";
+import { Asset, AssetManager } from "../AssetManager";
 
 const Canvastry = () => {
   const [imageX, setImageX] = useState(0);
@@ -8,16 +9,12 @@ const Canvastry = () => {
   const [imageClicked, setImageClicked] = useState(false);
   const [imageColor, setImageColor] = useState("black");
   const canvasRef = useRef(null);
+  const imgWidth = 50;
+  const imgHeight = 50;
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-
-    // Load the images
-    const imgBlack = new Image();
-    const imgRed = new Image();
-    imgBlack.src = switch_black;
-    imgRed.src = switch_red;
 
     const drawImage = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -25,15 +22,13 @@ const Canvastry = () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Choose the image based on imageColor state
-      const img = imageColor === "black" ? imgBlack : imgRed;
+      const img =
+        imageColor === "black" ? fuse.getImageDef() : fuse.getImageSel();
 
       // Draw the image
-      ctx.drawImage(img, imageX, imageY, img.width, img.height);
+      ctx.drawImage(img, imageX, imageY, imgWidth, imgHeight);
     };
-
-    imgBlack.onload = drawImage;
-    imgRed.onload = drawImage;
-
+    let fuse = new Asset(fuse_def, fuse_sel, drawImage);
     const handleKeyDown = (event) => {
       if (event.key === "ArrowRight") {
         setImageX((prev) => prev + 10);
@@ -51,7 +46,7 @@ const Canvastry = () => {
       const mouseX = event.clientX - canvasRect.left;
       const mouseY = event.clientY - canvasRect.top;
 
-      const img = imageColor === "black" ? imgBlack : imgRed;
+      const img = imageColor === "black" ? fuse.getImageDef(): fuse.getImageSel();
 
       if (
         mouseX > imageX &&
