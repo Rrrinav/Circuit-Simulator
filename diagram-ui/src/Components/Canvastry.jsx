@@ -1,74 +1,50 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import fuse_def from "../assets/fuse_def.svg";
 import fuse_sel from "../assets/fuse_sel.svg";
-import { Asset } from "../AssetManager";
+import { Asset, AssetManager } from "../AssetManager";
+import { ElementTypes, Element, Board } from "../Board";
 
 const Canvastry = () => {
   const canvasRef = useRef(null);
-  const [clicked, setClicked] = useState(false);
   const assetRef = useRef(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const boardRef = useRef(null);
+  const assetManagerRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    assetRef.current = new Asset(position.x, position.y, fuse_def, fuse_sel);
 
-    const handleMouseDown = (event) => {
-      if (
-        assetRef.current &&
-        assetRef.current.isClicked(event.offsetX, event.offsetY)
-      ) {
-        setClicked(true);
-      }
-    };
+    assetRef.current = new Asset(0, 0, fuse_def, fuse_sel);
+    assetManagerRef.current = new AssetManager();
+    boardRef.current = new Board(canvas, assetManagerRef.current);
+    boardRef.current.addElement(
+      new Element(0, 0, ElementTypes.fuse, assetRef.current),
+    );
 
-    const handleMouseUp = () => {
-      setClicked(false);
-    };
+    const boardInstance = boardRef.current;
 
-    const handleMouseMove = (event) => {
-      if (clicked) {
-        const newX = event.offsetX;
-        const newY = event.offsetY;
-        setPosition({ x: newX, y: newY });
-        assetRef.current.setX(newX);
-        assetRef.current.setY(newY);
-      }
-    };
-
-    // Attach event listeners
-    canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mouseup", handleMouseUp);
-    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mousedown", boardInstance.handleMouseDown);
+    canvas.addEventListener("mouseup", boardInstance.handleMouseUp);
+    canvas.addEventListener("mousemove", boardInstance.handleMouseMove);
 
     function mainLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "lightgray";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      assetRef.current.draw(ctx);
+      boardInstance.draw();
       requestAnimationFrame(mainLoop);
     }
-
     mainLoop();
 
     // Cleanup event listeners on component unmount
     return () => {
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mouseup", handleMouseUp);
-      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mousedown", boardInstance.handleMouseDown);
+      canvas.removeEventListener("mouseup", boardInstance.handleMouseUp);
+      canvas.removeEventListener("mousemove", boardInstance.handleMouseMove);
     };
-  }, [clicked, position]); // `clicked` and `position` are dependencies
+  }, []);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      id="canvas"
-      width={window.innerWidth}
-      height={window.innerHeight}
-      style={{ border: "1px solid black" }}
-    />
-  );
+  return <canvas ref={canvasRef} width={800} height={600} />;
 };
 
 export default Canvastry;

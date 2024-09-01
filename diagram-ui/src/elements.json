@@ -1,0 +1,14 @@
+{
+  elements: [
+    resistor: {
+      selected: {
+        color: "...",
+        paths: [
+          pathOne: "...",
+          ...
+        ],
+        
+      }
+    }
+  ]
+}

@@ -12,8 +12,6 @@ export class Asset {
     this.imgSelected.width = 50;
     this.imgSelected.height = 50;
 
-    this.isSelected = false;
-
     this.img.crossOrigin = "Anonymous";
     this.imgSelected.crossOrigin = "Anonymous";
   }
@@ -40,8 +38,8 @@ export class Asset {
   isImgSelected() {
     return this.isSelected;
   }
-  getImg() {
-    return this.isSelected ? this.imgSelected : this.img;
+  getImg(isSelected) {
+    return isSelected ? this.imgSelected : this.img;
   }
   toggleSelectStatus() {
     this.isSelected = !this.isSelected;
@@ -62,7 +60,7 @@ export class Asset {
   }
   draw(ctx) {
     const image = this.isSelected ? this.imgSelected : this.img;
-    ctx.drawImage(image, this.x, this.y, image.width, image.height); 
+    ctx.drawImage(image, this.x, this.y, image.width, image.height);
     //For debugging purposes
     ctx.strokeStyle = "green";
     ctx.strokeRect(this.x, this.y, image.width, image.height);
