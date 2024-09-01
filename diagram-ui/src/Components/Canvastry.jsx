@@ -1,73 +1,64 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
-import fuse_def from "../assets/fuse_def.svg"; // Assuming corrected SVG filenames
+import React, { useState, useEffect, useRef } from "react";
+import fuse_def from "../assets/fuse_def.svg";
 import fuse_sel from "../assets/fuse_sel.svg";
-import { Asset, AssetManager } from "../AssetManager";
+import { Asset } from "../AssetManager";
 
 const Canvastry = () => {
-  const [imageX, setImageX] = useState(0);
-  const [imageY, setImageY] = useState(0);
-  const [imageClicked, setImageClicked] = useState(false);
-  const [imageColor, setImageColor] = useState("black");
   const canvasRef = useRef(null);
-  const imgWidth = 50;
-  const imgHeight = 50;
+  const [clicked, setClicked] = useState(false);
+  const assetRef = useRef(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
+    assetRef.current = new Asset(position.x, position.y, fuse_def, fuse_sel);
 
-    const drawImage = () => {
+    const handleMouseDown = (event) => {
+      if (
+        assetRef.current &&
+        assetRef.current.isClicked(event.offsetX, event.offsetY)
+      ) {
+        setClicked(true);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setClicked(false);
+    };
+
+    const handleMouseMove = (event) => {
+      if (clicked) {
+        const newX = event.offsetX;
+        const newY = event.offsetY;
+        setPosition({ x: newX, y: newY });
+        assetRef.current.setX(newX);
+        assetRef.current.setY(newY);
+      }
+    };
+
+    // Attach event listeners
+    canvas.addEventListener("mousedown", handleMouseDown);
+    canvas.addEventListener("mouseup", handleMouseUp);
+    canvas.addEventListener("mousemove", handleMouseMove);
+
+    function mainLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "lightgray";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      assetRef.current.draw(ctx);
+      requestAnimationFrame(mainLoop);
+    }
 
-      // Choose the image based on imageColor state
-      const img =
-        imageColor === "black" ? fuse.getImageDef() : fuse.getImageSel();
+    mainLoop();
 
-      // Draw the image
-      ctx.drawImage(img, imageX, imageY, imgWidth, imgHeight);
-    };
-    let fuse = new Asset(fuse_def, fuse_sel, drawImage);
-    const handleKeyDown = (event) => {
-      if (event.key === "ArrowRight") {
-        setImageX((prev) => prev + 10);
-      } else if (event.key === "ArrowLeft") {
-        setImageX((prev) => prev - 10);
-      } else if (event.key === "ArrowDown") {
-        setImageY((prev) => prev + 10);
-      } else if (event.key === "ArrowUp") {
-        setImageY((prev) => prev - 10);
-      }
-    };
-
-    const handleMouseDown = (event) => {
-      const canvasRect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - canvasRect.left;
-      const mouseY = event.clientY - canvasRect.top;
-
-      const img = imageColor === "black" ? fuse.getImageDef(): fuse.getImageSel();
-
-      if (
-        mouseX > imageX &&
-        mouseX < imageX + img.width &&
-        mouseY > imageY &&
-        mouseY < imageY + img.height
-      ) {
-        setImageClicked((prev) => !prev);
-        setImageColor((prev) => (prev === "black" ? "red" : "black"));
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    canvas.addEventListener("mousedown", handleMouseDown);
-
-    // Cleanup
+    // Cleanup event listeners on component unmount
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
       canvas.removeEventListener("mousedown", handleMouseDown);
+      canvas.removeEventListener("mouseup", handleMouseUp);
+      canvas.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [imageX, imageY, imageClicked, imageColor]);
+  }, [clicked, position]); // `clicked` and `position` are dependencies
 
   return (
     <canvas
@@ -76,7 +67,7 @@ const Canvastry = () => {
       width={window.innerWidth}
       height={window.innerHeight}
       style={{ border: "1px solid black" }}
-    ></canvas>
+    />
   );
 };
 
