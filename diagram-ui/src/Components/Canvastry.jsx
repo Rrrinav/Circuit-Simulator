@@ -44,7 +44,13 @@ const Canvastry = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} width={800} height={600} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      width={window.innerWidth}
+      height={window.innerHeight}
+    />
+  );
 };
 
 export default Canvastry;
