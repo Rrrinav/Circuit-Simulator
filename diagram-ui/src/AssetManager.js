@@ -1,90 +1,85 @@
 export class Asset {
-  constructor(imgX, imgY, imageDef, imageSel) {
-    this.x = imgX;
-    this.y = imgY;
-    this.img = new Image();
-    this.imgSelected = new Image();
-    this.img.src = imageDef;
-    this.imgSelected.src = imageSel;
-    this.img.width = 50;
-    this.img.height = 50;
-
-    this.imgSelected.width = 50;
-    this.imgSelected.height = 50;
-
-    this.img.crossOrigin = "Anonymous";
-    this.imgSelected.crossOrigin = "Anonymous";
+  constructor(imageDef, imageSel) {
+    this.defaultImg = new Image();
+    this.selectedImg = new Image();
+    this.defaultImg.crossOrigin = "Anonymous";
+    this.selectedImg.crossOrigin = "Anonymous";
+    this.defaultSrc = imageDef;
+    this.selectedSrc = imageSel;
   }
+
+  load() {
+    return Promise.all([
+      new Promise((resolve, reject) => {
+        this.defaultImg.onload = resolve;
+        this.defaultImg.onerror = reject;
+        this.defaultImg.src = this.defaultSrc;
+      }),
+      new Promise((resolve, reject) => {
+        this.selectedImg.onload = resolve;
+        this.selectedImg.onerror = reject;
+        this.selectedImg.src = this.selectedSrc;
+      }),
+    ]);
+  }
+
   getImageDef() {
-    return this.img;
+    return this.defaultImg;
   }
   getImageSel() {
-    return this.imgSelected;
+    return this.selectedImg;
   }
   setWidth(width) {
-    this.img.width = width;
-    this.imgSelected.width = width;
+    this.defaultImg.width = width;
+    this.selectedImg.width = width;
   }
   setHeight(height) {
-    this.img.height = height;
-    this.imgSelected.height = height;
+    this.defaultImg.height = height;
+    this.selectedImg.height = height;
   }
   getWidth() {
-    return this.img.width;
+    return this.defaultImg.width;
   }
   getHeight() {
-    return this.img.height;
+    return this.defaultImg.height;
   }
-  isImgSelected() {
-    return this.isSelected;
-  }
+
   getImg(isSelected) {
-    return isSelected ? this.imgSelected : this.img;
-  }
-  toggleSelectStatus() {
-    this.isSelected = !this.isSelected;
-  }
-  isClicked(x, y) {
-    return (
-      x > this.x &&
-      x < this.x + this.img.width &&
-      y > this.y &&
-      y < this.y + this.img.height
-    );
-  }
-  getX() {
-    return this.x;
-  }
-  getY() {
-    return this.y;
-  }
-  draw(ctx) {
-    const image = this.isSelected ? this.imgSelected : this.img;
-    ctx.drawImage(image, this.x, this.y, image.width, image.height);
-    //For debugging purposes
-    ctx.strokeStyle = "green";
-    ctx.strokeRect(this.x, this.y, image.width, image.height);
-    return true;
-  }
-  setX(x) {
-    this.x = x;
-  }
-  setY(y) {
-    this.y = y;
+    return isSelected ? this.selectedImg : this.defaultImg;
   }
 }
 
 export class AssetManager {
   constructor() {
     this.assets = {};
+    this.loadedAssets = 0;
+    this.totalAssets = 0;
   }
   addAsset(name, imageDef, imageSel) {
     this.assets[name] = new Asset(imageDef, imageSel);
+    this.totalAssets++;
   }
   addAsset(name, asset) {
     this.assets[name] = asset;
   }
   getAsset(name) {
     return this.assets[name];
+  }
+
+  loadAll() {
+    return new Promise((resolve, reject) => {
+      for (const name in this.assets) {
+        const asset = this.assets[name];
+        asset
+          .load()
+          .then(() => {
+            this.loadedAssets += 2;
+            if (this.loadedAssets === this.totalAssets) {
+              resolve();
+            }
+          })
+          .catch(reject);
+      }
+    });
   }
 }

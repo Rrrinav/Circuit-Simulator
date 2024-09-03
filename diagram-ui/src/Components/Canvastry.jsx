@@ -1,10 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import ElementMenu from "./ElementMenu";
 import fuse_def from "../assets/fuse_def.svg";
 import fuse_sel from "../assets/fuse_sel.svg";
 import { Asset, AssetManager } from "../AssetManager";
 import { ElementTypes, Element, Board } from "../Board";
 
 const Canvastry = () => {
+  // Element that I have currently chosen from options to draw on board
+  const [optedElement, setOpetedElement] = useState(ElementTypes.fuse);
   const canvasRef = useRef(null);
   const assetRef = useRef(null);
   const boardRef = useRef(null);
@@ -14,7 +17,8 @@ const Canvastry = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    assetRef.current = new Asset(0, 0, fuse_def, fuse_sel);
+    assetRef.current = new Asset(fuse_def, fuse_sel);
+    assetRef.current.load().then(() => {});
     assetManagerRef.current = new AssetManager();
     boardRef.current = new Board(canvas, assetManagerRef.current);
     boardRef.current.addElement(
@@ -23,14 +27,13 @@ const Canvastry = () => {
 
     const boardInstance = boardRef.current;
 
-    canvas.addEventListener("mousedown", boardInstance.handleMouseDown);
+    canvas.addEventListener("mousedown", (event) => {
+      boardInstance.handleMouseDown(event, optedElement);
+    });
     canvas.addEventListener("mouseup", boardInstance.handleMouseUp);
     canvas.addEventListener("mousemove", boardInstance.handleMouseMove);
 
     function mainLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "lightgray";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
       boardInstance.draw();
       requestAnimationFrame(mainLoop);
     }
@@ -45,11 +48,14 @@ const Canvastry = () => {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={window.innerWidth}
-      height={window.innerHeight}
-    />
+    <>
+      <ElementMenu />
+      <canvas
+        ref={canvasRef}
+        width={window.innerWidth}
+        height={window.innerHeight}
+      />
+    </>
   );
 };
 

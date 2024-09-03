@@ -12,10 +12,12 @@ export class Element {
     this.type = type;
     this.asset = asset;
     this.isSelected = false;
+    this.connectedElements = [];
   }
 
   draw(ctx, cellSize) {
     const image = this.asset.getImg(this.isSelected);
+
     const x = this.gridX * cellSize;
     const y = this.gridY * cellSize;
 
@@ -37,10 +39,18 @@ export class Element {
   toggelSelectStatus() {
     this.isSelected = !this.isSelected;
   }
-  
+
   setGridPosition(gridX, gridY) {
     this.gridX = gridX;
     this.gridY = gridY;
+  }
+
+  connectTo(element) {
+    this.connectedElements.push(element);
+  }
+
+  getConnectedElements() {
+    return this.connectedElements;
   }
 }
 
@@ -70,7 +80,7 @@ export class Board {
     this.elements.push(element);
   }
 
-  handleMouseDown(event) {
+  handleMouseDown(event, optedElement) {
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -84,9 +94,13 @@ export class Board {
         this.draggableElement = element;
         this.clickOffsetX = gridX - element.gridX;
         this.clickOffsetY = gridY - element.gridY;
-        break;
+        return;
       }
     }
+
+    this.addElement(
+      new Element(x, y, optedElement, this.assetManager.get(optedElement)),
+    );
   }
 
   handleMouseUp(event) {
@@ -119,7 +133,7 @@ export class Board {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.fillStyle = "lightgray";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    
+
     this.ctx.strokeStyle = "green";
     // Draw grid lines (optional)
     for (let i = 0; i <= this.gridWidth; i++) {
