@@ -3,6 +3,7 @@ export const ElementTypes = {
   switch: "_switch",
   bulb: "_bulb",
   wire: "_wire",
+  battery: "_battery",
 };
 
 export class Element {
@@ -64,6 +65,7 @@ export class Board {
     this.clickOffsetY = 0;
     this.elements = [];
     this.draggableElement = null;
+    this.lastSelectedElement = null;
 
     // Define grid size
     this.cellSize = Math.max(canvas.width, canvas.height) / 20;
@@ -90,7 +92,16 @@ export class Board {
 
     for (let element of this.elements) {
       if (element.isClicked(x, y, this.cellSize)) {
-        element.toggelSelectStatus();
+        if (this.lastSelectedElement) {
+          this.lastSelectedElement.toggelSelectStatus();
+        }
+        if (this.lastSelectedElement === element) {
+          this.lastSelectedElement = null;
+        } else {
+          this.lastSelectedElement = element;
+          element.toggelSelectStatus();
+        }
+
         this.draggableElement = element;
         this.clickOffsetX = gridX - element.gridX;
         this.clickOffsetY = gridY - element.gridY;
@@ -99,7 +110,12 @@ export class Board {
     }
 
     this.addElement(
-      new Element(x, y, optedElement, this.assetManager.get(optedElement)),
+      new Element(
+        gridX,
+        gridY,
+        optedElement,
+        this.assetManager.getAsset(optedElement),
+      ),
     );
   }
 

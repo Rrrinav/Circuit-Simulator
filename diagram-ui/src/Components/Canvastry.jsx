@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import ElementMenu from "./ElementMenu";
 import fuse_def from "../assets/fuse_def.svg";
 import fuse_sel from "../assets/fuse_sel.svg";
+import battery_def from "../assets/battery_def.svg";
+import battery_sel from "../assets/battery_sel.svg";
 import { Asset, AssetManager } from "../AssetManager";
 import { ElementTypes, Element, Board } from "../Board";
 
@@ -15,14 +17,19 @@ const Canvastry = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    //const ctx = canvas.getContext("2d");
 
-    assetRef.current = new Asset(fuse_def, fuse_sel);
-    assetRef.current.load().then(() => {});
+    // Asset Loading
     assetManagerRef.current = new AssetManager();
+    assetManagerRef.current.addAsset(ElementTypes.fuse  ,new Asset(fuse_def, fuse_sel));
+    assetManagerRef.current.addAsset(ElementTypes.battery  ,new Asset(battery_def, battery_sel));
+    assetManagerRef.current.loadAll().then(() => {
+      console.log("All assets loaded");
+    });
+
     boardRef.current = new Board(canvas, assetManagerRef.current);
     boardRef.current.addElement(
-      new Element(0, 0, ElementTypes.fuse, assetRef.current),
+      new Element(0, 0, ElementTypes.fuse, assetManagerRef.current.getAsset(ElementTypes.fuse))
     );
 
     const boardInstance = boardRef.current;
