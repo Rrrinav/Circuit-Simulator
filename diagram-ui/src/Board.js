@@ -76,6 +76,7 @@ export class Board {
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
     // if (elements.size <= 0) {
     this.elements = [];
     // } else {
@@ -97,8 +98,7 @@ export class Board {
     this.elements.push(element);
   }
 
-  handleMouseDown(event, optedElement) {
-    console.log(optedElement);
+  handleMouseDown(event) { 
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -150,6 +150,14 @@ export class Board {
     this.draggableElement = null;
   }
 
+  handleKeyDown(event) {
+    if (event.key === "Backspace") {
+      this.elements = this.elements.filter(
+        (element) => element !== this.lastSelectedElement,
+      );
+    }
+  }
+
   handleMouseMove(event) {
     if (this.draggableElement) {
       const rect = this.canvas.getBoundingClientRect();
@@ -180,23 +188,28 @@ export class Board {
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     // drawDragAndDropMenu();
-    this.ctx.fillStyle = "lightgray";
+    this.ctx.fillStyle = "#e1e1e1";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.ctx.strokeStyle = "green";
-    // Draw grid lines (optional)
+    this.ctx.strokeStyle = "#99aabb";
+    // Draw pluses at grid intersections
     for (let i = 0; i <= this.gridWidth; i++) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(i * this.cellSize, 0);
-      this.ctx.lineTo(i * this.cellSize, this.canvas.height);
-      this.ctx.stroke();
-    }
+      for (let j = 0; j <= this.gridHeight; j++) {
+        const x = i * this.cellSize;
+        const y = j * this.cellSize;
 
-    for (let j = 0; j <= this.gridHeight; j++) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, j * this.cellSize);
-      this.ctx.lineTo(this.canvas.width, j * this.cellSize);
-      this.ctx.stroke();
+        // Draw a plus sign at each grid intersection
+        this.ctx.beginPath();
+        // Vertical part of the plus
+        this.ctx.moveTo(x, y - 5); // Start a little above the intersection
+        this.ctx.lineTo(x, y + 5); // End a little below the intersection
+
+        // Horizontal part of the plus
+        this.ctx.moveTo(x - 5, y); // Start a little left of the intersection
+        this.ctx.lineTo(x + 5, y); // End a little right of the intersection
+
+        this.ctx.stroke();
+      }
     }
 
     // Draw all elements aligned to the grid

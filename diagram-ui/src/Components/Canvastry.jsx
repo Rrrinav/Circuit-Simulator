@@ -44,6 +44,7 @@ const Canvastry = () => {
         canvas.addEventListener("mousedown", handleMouseDown);
         canvas.addEventListener("mouseup", handleMouseUp);
         canvas.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("keydown", handleKeyDown);
 
         // Main loop to keep redrawing the canvas
         function mainLoop() {
@@ -59,6 +60,7 @@ const Canvastry = () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mouseup", handleMouseUp);
       canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -78,6 +80,12 @@ const Canvastry = () => {
   const handleMouseMove = (event) => {
     if (boardRef.current) {
       boardRef.current.handleMouseMove(event);
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (boardRef.current){ 
+      boardRef.current.handleKeyDown(event);
     }
   };
 
