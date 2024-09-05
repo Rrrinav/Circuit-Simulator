@@ -7,17 +7,16 @@ export const ElementTypes = {
 };
 
 export class Element {
-  constructor(gridX, gridY, type, asset) {
+  constructor(gridX, gridY, type) {
     this.gridX = gridX; // Grid position X
     this.gridY = gridY; // Grid position Y
     this.type = type;
-    this.asset = asset;
     this.isSelected = false;
     this.connectedElements = [];
   }
 
-  draw(ctx, cellSize) {
-    const image = this.asset.getImg(this.isSelected);
+  draw(ctx, cellSize, assetMannager) {
+    const image = assetMannager.getAsset(this.type).getImg(this.isSelected);
 
     const x = this.gridX * cellSize;
     const y = this.gridY * cellSize;
@@ -63,10 +62,11 @@ export class Board {
     this.draggedAsset = null;
     this.clickOffsetX = 0;
     this.clickOffsetY = 0;
-    this.elements = [];
     this.draggableElement = null;
     this.lastSelectedElement = null;
+    this.selectedElementToBeDrawn = ElementTypes.fuse;
 
+    this.menuHeight = 60;
     // Define grid size
     this.cellSize = Math.max(canvas.width, canvas.height) / 20;
     this.gridWidth = Math.floor(canvas.width / this.cellSize);
@@ -76,6 +76,21 @@ export class Board {
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
+    // if (elements.size <= 0) {
+    this.elements = [];
+    // } else {
+    //   this.elements = [];
+    //   for (let element in elements) {
+    //     this.elements.push(
+    //       new Element(
+    //         element.gridX,
+    //         element.gridY,
+    //         element.type,
+    //         this.assetManager,
+    //       ),
+    //     );
+    //   }
+    // }
   }
 
   addElement(element) {
@@ -83,6 +98,7 @@ export class Board {
   }
 
   handleMouseDown(event, optedElement) {
+    console.log(optedElement);
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -95,6 +111,7 @@ export class Board {
         if (this.lastSelectedElement) {
           this.lastSelectedElement.toggelSelectStatus();
         }
+
         if (this.lastSelectedElement === element) {
           this.lastSelectedElement = null;
         } else {
@@ -113,10 +130,14 @@ export class Board {
       new Element(
         gridX,
         gridY,
-        optedElement,
-        this.assetManager.getAsset(optedElement),
+        this.selectedElementToBeDrawn,
+        this.assetManager,
       ),
     );
+  }
+
+  setSelectedElementToBeDrawn(type) {
+    this.selectedElementToBeDrawn = type;
   }
 
   handleMouseUp(event) {
@@ -145,8 +166,20 @@ export class Board {
     }
   }
 
+  drawDragAndDropMenu() {
+    this.ctx.fillStyle = "#f0f0f0";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.menuHeight);
+
+    const elements = [ElementTypes.fuse, ElementTypes.battery];
+    elements.forEach((type, index) => {
+      const image = this.assetManager.getAsset(type).getImg(false);
+      this.ctx.drawImage(image, 10 + index * 50, 10, 40, 40);
+    });
+  }
+
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // drawDragAndDropMenu();
     this.ctx.fillStyle = "lightgray";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -167,6 +200,8 @@ export class Board {
     }
 
     // Draw all elements aligned to the grid
-    this.elements.forEach((element) => element.draw(this.ctx, this.cellSize));
+    this.elements.forEach((element) =>
+      element.draw(this.ctx, this.cellSize, this.assetManager),
+    );
   }
 }

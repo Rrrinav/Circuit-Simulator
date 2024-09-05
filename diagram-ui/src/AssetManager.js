@@ -66,20 +66,15 @@ export class AssetManager {
     return this.assets[name];
   }
 
-  loadAll() {
-    return new Promise((resolve, reject) => {
-      for (const name in this.assets) {
-        const asset = this.assets[name];
-        asset
-          .load()
-          .then(() => {
-            this.loadedAssets += 2;
-            if (this.loadedAssets === this.totalAssets) {
-              resolve();
-            }
-          })
-          .catch(reject);
-      }
-    });
+  async loadAll() {
+    const loadPromises = Object.values(this.assets).map((asset) =>
+      asset.load(),
+    );
+    await Promise.all(loadPromises);
+  }
+
+  getAllAssets()
+  {
+    return this.assets;
   }
 }
