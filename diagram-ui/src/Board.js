@@ -23,9 +23,9 @@ export class Element {
 
     ctx.drawImage(image, x, y, cellSize, cellSize);
 
-    // For debugging purposes
-    ctx.strokeStyle = "black";
-    ctx.strokeRect(x, y, cellSize, cellSize);
+    // // For debugging purposes
+    // ctx.strokeStyle = "black";
+    // ctx.strokeRect(x, y, cellSize, cellSize);
   }
 
   isClicked(mouseX, mouseY, cellSize) {
@@ -72,37 +72,38 @@ export class Board {
     this.gridWidth = Math.floor(canvas.width / this.cellSize);
     this.gridHeight = Math.floor(canvas.height / this.cellSize);
 
+    this.elements = [];
+
     // Bind the methods to this instance
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
-    // if (elements.size <= 0) {
-    this.elements = [];
-    // } else {
-    //   this.elements = [];
-    //   for (let element in elements) {
-    //     this.elements.push(
-    //       new Element(
-    //         element.gridX,
-    //         element.gridY,
-    //         element.type,
-    //         this.assetManager,
-    //       ),
-    //     );
-    //   }
-    // }
+
+    // Add event listeners directly to the canvas
+    this.canvas.addEventListener("mousedown", this.handleMouseDown);
+    this.canvas.addEventListener("mouseup", this.handleMouseUp);
+    this.canvas.addEventListener("mousemove", this.handleMouseMove);
+    document.addEventListener("keydown", this.handleKeyDown);
+  }
+
+  getMousePosition(event) {
+    const rect = this.canvas.getBoundingClientRect();
+    const scaleX = this.canvas.width / rect.width;
+    const scaleY = this.canvas.height / rect.height;
+
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
+    };
   }
 
   addElement(element) {
     this.elements.push(element);
   }
 
-  handleMouseDown(event) { 
-    const rect = this.canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
+  handleMouseDown(event) {
+    const { x, y } = this.getMousePosition(event);
     const gridX = Math.floor(x / this.cellSize);
     const gridY = Math.floor(y / this.cellSize);
 
@@ -142,28 +143,30 @@ export class Board {
 
   handleMouseUp(event) {
     if (this.draggableElement) {
+      const { x, y } = this.getMousePosition(event);
+      const gridX = Math.floor(x / this.cellSize);
+      const gridY = Math.floor(y / this.cellSize);
+
       this.draggableElement.setGridPosition(
-        this.draggableElement.gridX + this.clickOffsetX,
-        this.draggableElement.gridY + this.clickOffsetY,
+        gridX - this.clickOffsetX,
+        gridY - this.clickOffsetY,
       );
     }
     this.draggableElement = null;
   }
 
   handleKeyDown(event) {
-    if (event.key === "Backspace") {
+    if (event.key === "Backspace" && this.lastSelectedElement) {
       this.elements = this.elements.filter(
         (element) => element !== this.lastSelectedElement,
       );
+      this.lastSelectedElement = null;
     }
   }
 
   handleMouseMove(event) {
     if (this.draggableElement) {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
+      const { x, y } = this.getMousePosition(event);
       const gridX = Math.floor(x / this.cellSize);
       const gridY = Math.floor(y / this.cellSize);
 
@@ -174,20 +177,8 @@ export class Board {
     }
   }
 
-  drawDragAndDropMenu() {
-    this.ctx.fillStyle = "#f0f0f0";
-    this.ctx.fillRect(0, 0, this.canvas.width, this.menuHeight);
-
-    const elements = [ElementTypes.fuse, ElementTypes.battery];
-    elements.forEach((type, index) => {
-      const image = this.assetManager.getAsset(type).getImg(false);
-      this.ctx.drawImage(image, 10 + index * 50, 10, 40, 40);
-    });
-  }
-
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    // drawDragAndDropMenu();
     this.ctx.fillStyle = "#e1e1e1";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -201,13 +192,11 @@ export class Board {
         // Draw a plus sign at each grid intersection
         this.ctx.beginPath();
         // Vertical part of the plus
-        this.ctx.moveTo(x, y - 5); // Start a little above the intersection
-        this.ctx.lineTo(x, y + 5); // End a little below the intersection
-
+        this.ctx.moveTo(x, y - 5);
+        this.ctx.lineTo(x, y + 5);
         // Horizontal part of the plus
-        this.ctx.moveTo(x - 5, y); // Start a little left of the intersection
-        this.ctx.lineTo(x + 5, y); // End a little right of the intersection
-
+        this.ctx.moveTo(x - 5, y);
+        this.ctx.lineTo(x + 5, y);
         this.ctx.stroke();
       }
     }
@@ -216,5 +205,21 @@ export class Board {
     this.elements.forEach((element) =>
       element.draw(this.ctx, this.cellSize, this.assetManager),
     );
+  }
+
+  updateCanvasSize(width, height) {
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.cellSize = Math.max(width, height) / 20;
+    this.gridWidth = Math.floor(width / this.cellSize);
+    this.gridHeight = Math.floor(height / this.cellSize);
+  }
+
+  destroy() {
+    // Remove event listeners when the board is no longer needed
+    this.canvas.removeEventListener("mousedown", this.handleMouseDown);
+    this.canvas.removeEventListener("mouseup", this.handleMouseUp);
+    this.canvas.removeEventListener("mousemove", this.handleMouseMove);
+    document.removeEventListener("keydown", this.handleKeyDown);
   }
 }

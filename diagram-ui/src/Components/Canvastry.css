@@ -1,0 +1,66 @@
+.canvastry-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.circuit-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.elements-menu {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: rgba(240, 240, 240, 0.9);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.elements-menu h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.menu-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.menu-item.selected {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.menu-item img {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.menu-item span {
+  font-size: 0.9em;
+  color: #333;
+}

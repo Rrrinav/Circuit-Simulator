@@ -1,28 +1,35 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import fuse_def from "../assets/fuse_def.svg";
 import fuse_sel from "../assets/fuse_sel.svg";
 import battery_def from "../assets/battery_def.svg";
 import battery_sel from "../assets/battery_sel.svg";
 import { Asset, AssetManager } from "../AssetManager";
 import { ElementTypes, Board } from "../Board";
+import "./Canvastry.css";
 
 const Canvastry = () => {
-  // Element that I have currently chosen from options to draw on the board
   const canvasRef = useRef(null);
   const boardRef = useRef(null);
   const assetManagerRef = useRef(null);
+  const [selectedElement, setSelectedElement] = useState(ElementTypes.fuse);
 
-  const handleChange = (event) => {
-    console.log("Selected element: ", event.target.value);
-    boardRef.current.setSelectedElementToBeDrawn(event.target.value);
+  const handleElementSelect = (element) => {
+    setSelectedElement(element);
+    boardRef.current.setSelectedElementToBeDrawn(element);
   };
 
-  // Initialize board and assets once when the component mounts
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Initialize AssetManager and Board only once
+    const resizeCanvas = () => {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      if (boardRef.current) {
+        boardRef.current.updateCanvasSize(canvas.width, canvas.height);
+      }
+    };
+
     if (!assetManagerRef.current) {
       assetManagerRef.current = new AssetManager();
       assetManagerRef.current.addAsset(
@@ -36,17 +43,11 @@ const Canvastry = () => {
 
       assetManagerRef.current.loadAll().then(() => {
         console.log("All assets loaded");
-
-        // Initialize the board
         boardRef.current = new Board(canvas, assetManagerRef.current);
+        resizeCanvas();
 
-        // Event listeners for interaction
-        canvas.addEventListener("mousedown", handleMouseDown);
-        canvas.addEventListener("mouseup", handleMouseUp);
-        canvas.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("resize", resizeCanvas);
 
-        // Main loop to keep redrawing the canvas
         function mainLoop() {
           boardRef.current.draw();
           requestAnimationFrame(mainLoop);
@@ -55,75 +56,47 @@ const Canvastry = () => {
       });
     }
 
-    // Cleanup event listeners when the component unmounts
     return () => {
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mouseup", handleMouseUp);
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", resizeCanvas);
+      if (boardRef.current) {
+        boardRef.current.destroy();
+      }
     };
   }, []);
 
-  // Handle mouse down, send the currently opted element to the board
-  const handleMouseDown = (event) => {
-    if (boardRef.current) {
-      boardRef.current.handleMouseDown(event);
-    }
-  };
-
-  const handleMouseUp = (event) => {
-    if (boardRef.current) {
-      boardRef.current.handleMouseUp(event);
-    }
-  };
-
-  const handleMouseMove = (event) => {
-    if (boardRef.current) {
-      boardRef.current.handleMouseMove(event);
-    }
-  };
-
-  const handleKeyDown = (event) => {
-    if (boardRef.current){ 
-      boardRef.current.handleKeyDown(event);
-    }
-  };
-
   return (
-    <>
-      <div
-        style={{
-          padding: "10px",
-          backgroundColor: "#ccc",
-          display: "flex",
-          justifyContent: "space-around",
-        }}
-      >
-        <input
-          type="radio"
-          name="shapes"
-          value={ElementTypes.fuse}
-          id="fuse"
-          onChange={handleChange}
-          defaultChecked
-        />
-        <label htmlFor="fuse">FUSE</label>
-
-        <input
-          type="radio"
-          name="shapes"
-          value={ElementTypes.battery}
-          id="battery"
-          onChange={handleChange}
-        />
-        <label htmlFor="battery">BATTERY</label>
+    <div className="canvastry-container">
+      <canvas ref={canvasRef} className="circuit-canvas" />
+      <div className="elements-menu">
+        <h2>Elements</h2>
+        <div className="menu-list">
+          <div
+            className={`menu-item ${selectedElement === ElementTypes.fuse ? "selected" : ""}`}
+            onClick={() => handleElementSelect(ElementTypes.fuse)}
+          >
+            <img
+              src={selectedElement === ElementTypes.fuse ? fuse_sel : fuse_def}
+              alt="Fuse"
+            />
+            <span>Fuse</span>
+          </div>
+          <div
+            className={`menu-item ${selectedElement === ElementTypes.battery ? "selected" : ""}`}
+            onClick={() => handleElementSelect(ElementTypes.battery)}
+          >
+            <img
+              src={
+                selectedElement === ElementTypes.battery
+                  ? battery_sel
+                  : battery_def
+              }
+              alt="Battery"
+            />
+            <span>Battery</span>
+          </div>
+        </div>
       </div>
-      <canvas
-        ref={canvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
-      />
-    </>
+    </div>
   );
 };
 

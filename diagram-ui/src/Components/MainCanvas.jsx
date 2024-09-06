@@ -88,7 +88,7 @@ const MainCanvas = ({ gridSize = 50 }) => {
     };
   }, [gridSize]);
 
-  return <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />;
+  return <canvas ref={canvasRef} style={{ wiidth: "100%", height: "100%" }} />;
 };
 
 export default MainCanvas;
