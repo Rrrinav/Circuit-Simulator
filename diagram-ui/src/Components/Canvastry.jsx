@@ -3,6 +3,10 @@ import fuse_def from "../assets/fuse_def.svg";
 import fuse_sel from "../assets/fuse_sel.svg";
 import battery_def from "../assets/battery_def.svg";
 import battery_sel from "../assets/battery_sel.svg";
+import resistor_def from "../assets/resistor_def.svg";
+import resistor_sel from "../assets/resistor_sel.svg";
+import wire_def from "../assets/wire_def.svg";
+import wire_sel from "../assets/wire_sel.svg";
 import { Asset, AssetManager } from "../AssetManager";
 import { ElementTypes, Board } from "../Board";
 import "./Canvastry.css";
@@ -40,13 +44,21 @@ const Canvastry = () => {
         ElementTypes.battery,
         new Asset(battery_def, battery_sel),
       );
-
+      assetManagerRef.current.addAsset(
+        ElementTypes.resistor,
+        new Asset(resistor_def, resistor_sel),
+      );
       assetManagerRef.current.loadAll().then(() => {
         console.log("All assets loaded");
         boardRef.current = new Board(canvas, assetManagerRef.current);
         resizeCanvas();
 
         window.addEventListener("resize", resizeCanvas);
+        document.addEventListener("keydown", (e) => {
+          if (e.code == "Space") {
+            handleElementSelect(ElementTypes.fuse);
+          }
+        });
 
         function mainLoop() {
           boardRef.current.draw();
@@ -93,6 +105,30 @@ const Canvastry = () => {
               alt="Battery"
             />
             <span>Battery</span>
+          </div>
+          <div
+            className={`menu-item ${selectedElement === ElementTypes.resistor ? "selected" : ""}`}
+            onClick={() => handleElementSelect(ElementTypes.resistor)}
+          >
+            <img
+              src={
+                selectedElement === ElementTypes.resistor
+                  ? resistor_sel
+                  : resistor_def
+              }
+              alt="resistor"
+            />
+            <span>Resistor</span>
+          </div>
+          <div
+            className={`menu-item ${selectedElement === ElementTypes.wire ? "selected" : ""}`}
+            onClick={() => handleElementSelect(ElementTypes.wire)}
+          >
+            <img
+              src={selectedElement === ElementTypes.wire ? wire_sel : wire_def}
+              alt="Wire"
+            />
+            <span>Wire</span>
           </div>
         </div>
       </div>
