@@ -5,8 +5,6 @@ import battery_def from "../assets/battery_def.svg";
 import battery_sel from "../assets/battery_sel.svg";
 import resistor_def from "../assets/resistor_def.svg";
 import resistor_sel from "../assets/resistor_sel.svg";
-import wire_def from "../assets/wire_def.svg";
-import wire_sel from "../assets/wire_sel.svg";
 import { Asset, AssetManager } from "../AssetManager";
 import { ElementTypes, Board } from "../Board";
 import "./Canvastry.css";
@@ -119,16 +117,6 @@ const Canvastry = () => {
               alt="resistor"
             />
             <span>Resistor</span>
-          </div>
-          <div
-            className={`menu-item ${selectedElement === ElementTypes.wire ? "selected" : ""}`}
-            onClick={() => handleElementSelect(ElementTypes.wire)}
-          >
-            <img
-              src={selectedElement === ElementTypes.wire ? wire_sel : wire_def}
-              alt="Wire"
-            />
-            <span>Wire</span>
           </div>
         </div>
       </div>

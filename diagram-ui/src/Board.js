@@ -1,3 +1,4 @@
+// BUG: This wire system totally sucks
 export const ElementTypes = {
   fuse: "_fuse",
   switch: "_switch",
@@ -6,7 +7,6 @@ export const ElementTypes = {
   battery: "_battery",
   resistor: "_resistor",
 };
-
 export class Element {
   constructor(gridX, gridY, type) {
     this.gridX = gridX;
@@ -237,7 +237,16 @@ export class Board {
         this.isDrawingWire = false;
         this.lastWireGridX = null;
         this.lastWireGridY = null;
+        return;
       }
+
+      this.currentWire.addSegment(gridX, gridY);
+      this.currentWire.complete();
+      this.wires.push(this.currentWire);
+      this.currentWire = null;
+      this.isDrawingWire = false;
+      this.lastWireGridX = null;
+      this.lastWireGridY = null;
     }
 
     if (this.draggableElement) {
