@@ -11,6 +11,8 @@ debug: $(BuildDir)/main
 
 main: $(BuildDir)/main
 
+static: $(BuildDir)/main_static
+
 $(BuildDir)/Circuit.o: $(DcDir)/Circuit.cpp
 	mkdir -p $(BuildDir)
 	$(cc) $(flags) $(Includes) $(Libs) -c $(DcDir)/Circuit.cpp -o $(BuildDir)/Circuit.o
@@ -27,8 +29,11 @@ $(BuildDir)/main.o: ./SRC/main.cpp
 	mkdir -p $(BuildDir)
 	$(cc) $(flags) $(Includes) $(Libs) -c ./SRC/main.cpp -o $(BuildDir)/main.o
 
-$(BuildDir)/main: $(BuildDir)/main.o $(BuildDir)/Circuit.o $(BuildDir)/Element.o $(BuildDir)/Node.o 
+$(BuildDir)/main: $(BuildDir)/main.o $(BuildDir)/Circuit.o $(BuildDir)/Element.o $(BuildDir)/Node.o
 	$(cc) $(flags) $(Includes) $(Libs) $(BuildDir)/main.o $(BuildDir)/Circuit.o $(BuildDir)/Element.o $(BuildDir)/Node.o $(Linker) -o $(BuildDir)/main
+
+$(BuildDir)/main_static: $(BuildDir)/main.o $(BuildDir)/Circuit.o $(BuildDir)/Element.o $(BuildDir)/Node.o
+	$(cc) $(flags) $(Includes) $(Libs) $(BuildDir)/main.o $(BuildDir)/Circuit.o $(BuildDir)/Element.o $(BuildDir)/Node.o $(Linker) -static -o $(BuildDir)/main_static
 
 .PHONY: clean
 

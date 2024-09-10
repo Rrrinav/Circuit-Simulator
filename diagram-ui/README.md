@@ -13,6 +13,6 @@ Also it's 2023, so Web-dev has to be complicated and contain unnecessary bloat, 
 
 ## TODO (in no particular order)
 
-- [ ] Implement a drag and drop system for components
+- [ ] Implement a drag and drop system for components.
 - [ ] Implement wires ( sounds simple but it's not going to be! )
 - [ ] Implement a zoom and pan system

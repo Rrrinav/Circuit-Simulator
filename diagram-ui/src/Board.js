@@ -1,4 +1,6 @@
-// BUG: This wire system totally sucks
+// =======================================================================
+//      >>  ElementTypes
+// =======================================================================
 export const ElementTypes = {
   fuse: "_fuse",
   switch: "_switch",
@@ -7,6 +9,9 @@ export const ElementTypes = {
   battery: "_battery",
   resistor: "_resistor",
 };
+// =======================================================================
+//      >>  ElementTypes
+// =======================================================================
 export class Element {
   constructor(gridX, gridY, type) {
     this.gridX = gridX;
@@ -73,50 +78,85 @@ export class Element {
   }
 }
 
+// =======================================================================
+//      >>  WIRE CLASS
+// =======================================================================
+
+// TODO: > Wires don't have to begin from middle of the cell but from the terminal
+//         they are started from (left or right)
+//       > Populate the connectedElements array properly
+//       > Deletion of wires
+//       > Wires should be allowed to pass over other of their kind without connections
+//                - This has to be visualized properly!
+
 export class Wire {
-  constructor(startGridX, startGridY) {
-    this.segments = [{ x: startGridX, y: startGridY }];
+  constructor(startGridX, startGridY, startTerminal) {
+    this.segments = [{ x: startGridX, y: startGridY, terminal: startTerminal }];
     this.isComplete = false;
   }
 
-  addSegment(x, y) {
+  addSegment(x, y, terminal = null) {
     const lastSegment = this.segments[this.segments.length - 1];
     if (x !== lastSegment.x || y !== lastSegment.y) {
       // Determine whether to add a horizontal or vertical segment
       if (x !== lastSegment.x) {
         // Add horizontal segment
-        this.segments.push({ x: x, y: lastSegment.y });
-      } else {
+        this.segments.push({ x: x, y: lastSegment.y, terminal: null });
+      }
+      if (y !== lastSegment.y) {
         // Add vertical segment
-        this.segments.push({ x: lastSegment.x, y: y });
+        this.segments.push({ x: x, y: y, terminal: terminal });
       }
     }
   }
 
-  complete() {
+  complete(endTerminal) {
     this.isComplete = true;
+    this.segments[this.segments.length - 1].terminal = endTerminal;
   }
 
   draw(ctx, cellSize) {
     ctx.strokeStyle = this.isComplete ? "black" : "gray";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(
-      this.segments[0].x * cellSize + cellSize / 2,
-      this.segments[0].y * cellSize + cellSize / 2,
-    );
+
+    const startSegment = this.segments[0];
+    let startX = startSegment.x * cellSize + cellSize / 2;
+    let startY = startSegment.y * cellSize + cellSize / 2;
+
+    // Adjust start point based on the starting terminal
+    if (startSegment.terminal === "left") {
+      startX = startSegment.x * cellSize;
+    } else if (startSegment.terminal === "right") {
+      startX = (startSegment.x + 1) * cellSize;
+    }
+
+    ctx.moveTo(startX, startY);
 
     for (let i = 1; i < this.segments.length; i++) {
-      ctx.lineTo(
-        this.segments[i].x * cellSize + cellSize / 2,
-        this.segments[i].y * cellSize + cellSize / 2,
-      );
+      const segment = this.segments[i];
+      let endX = segment.x * cellSize + cellSize / 2;
+      let endY = segment.y * cellSize + cellSize / 2;
+
+      // Adjust end point for the last segment
+      if (i === this.segments.length - 1) {
+        if (segment.terminal === "left") {
+          endX = segment.x * cellSize;
+        } else if (segment.terminal === "right") {
+          endX = (segment.x + 1) * cellSize;
+        }
+      }
+
+      ctx.lineTo(endX, endY);
     }
 
     ctx.stroke();
   }
 }
 
+// =======================================================================
+//      >> BOARD CLASS
+// =======================================================================
 export class Board {
   constructor(canvas, assetManager) {
     this.canvas = canvas;
@@ -175,46 +215,65 @@ export class Board {
     const gridX = Math.floor(x / this.cellSize);
     const gridY = Math.floor(y / this.cellSize);
 
-    const element = this.elements.find((element) =>
+    const clickedElement = this.elements.find((element) =>
       element.isClicked(x, y, this.cellSize),
     );
 
-    if (element) {
-      if (this.lastSelectedElement) {
-        this.lastSelectedElement.toggelSelectStatus();
-      }
-
-      if (
-        element.isClickedOnLeftTerminal(x, y, this.cellSize, 20) ||
-        element.isClickedOnRightTerminal(x, y, this.cellSize, 20)
+    if (clickedElement) {
+      if (clickedElement.isClickedOnLeftTerminal(x, y, this.cellSize, 20)) {
+        this.isDrawingWire = true;
+        this.currentWire = new Wire(gridX, gridY, "left");
+        this.lastWireGridX = gridX;
+        this.lastWireGridY = gridY;
+        return;
+      } else if (
+        clickedElement.isClickedOnRightTerminal(x, y, this.cellSize, 20)
       ) {
         this.isDrawingWire = true;
-        this.currentWire = new Wire(gridX, gridY);
+        this.currentWire = new Wire(gridX, gridY, "right");
         this.lastWireGridX = gridX;
         this.lastWireGridY = gridY;
         return;
       }
 
-      this.lastSelectedElement = element;
-      element.toggelSelectStatus();
+      // Toggle selection of the clicked element
+      clickedElement.toggelSelectStatus();
 
-      this.draggableElement = element;
-      this.clickOffsetX = gridX - element.gridX;
-      this.clickOffsetY = gridY - element.gridY;
+      // If the clicked element is different from the last selected element
+      if (
+        this.lastSelectedElement &&
+        this.lastSelectedElement !== clickedElement
+      ) {
+        this.lastSelectedElement.toggelSelectStatus(); // Deselect the previous element
+      }
+
+      // Update the last selected element
+      this.lastSelectedElement = clickedElement.isSelected
+        ? clickedElement
+        : null;
+
+      // Set up for dragging
+      this.draggableElement = clickedElement;
+      this.clickOffsetX = gridX - clickedElement.gridX;
+      this.clickOffsetY = gridY - clickedElement.gridY;
     } else if (this.isDrawingWire) {
       // If we're drawing a wire and clicked on an empty cell, add a new segment
       this.currentWire.addSegment(gridX, gridY);
       this.lastWireGridX = gridX;
       this.lastWireGridY = gridY;
     } else {
-      this.addElement(
-        new Element(
-          gridX,
-          gridY,
-          this.selectedElementToBeDrawn,
-          this.assetManager,
-        ),
+      // If clicked on empty space and not drawing a wire, add a new element
+      if (this.lastSelectedElement) {
+        this.lastSelectedElement.toggelSelectStatus();
+        this.lastSelectedElement = null;
+      }
+      const newElement = new Element(
+        gridX,
+        gridY,
+        this.selectedElementToBeDrawn,
+        this.assetManager,
       );
+      this.addElement(newElement);
     }
   }
 
@@ -229,19 +288,28 @@ export class Board {
       );
 
       if (element) {
-        // If we're ending on an element, complete the wire
-        this.currentWire.addSegment(gridX, gridY);
-        this.currentWire.complete();
-        this.wires.push(this.currentWire);
-        this.currentWire = null;
-        this.isDrawingWire = false;
-        this.lastWireGridX = null;
-        this.lastWireGridY = null;
-        return;
+        let endTerminal = null;
+        if (element.isClickedOnLeftTerminal(x, y, this.cellSize, 20)) {
+          endTerminal = "left";
+        } else if (element.isClickedOnRightTerminal(x, y, this.cellSize, 20)) {
+          endTerminal = "right";
+        }
+
+        if (endTerminal) {
+          this.currentWire.addSegment(gridX, gridY, endTerminal);
+          this.currentWire.complete(endTerminal);
+          this.wires.push(this.currentWire);
+          this.currentWire = null;
+          this.isDrawingWire = false;
+          this.lastWireGridX = null;
+          this.lastWireGridY = null;
+          return;
+        }
       }
 
+      // If not ending on an element terminal, complete the wire at the cell center
       this.currentWire.addSegment(gridX, gridY);
-      this.currentWire.complete();
+      this.currentWire.complete(null);
       this.wires.push(this.currentWire);
       this.currentWire = null;
       this.isDrawingWire = false;
