@@ -20,6 +20,10 @@ const Canvastry = () => {
     boardRef.current.setSelectedElementToBeDrawn(element);
   };
 
+  const logInfo = () => {
+    boardRef.current.logInfo();
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -118,6 +122,7 @@ const Canvastry = () => {
             />
             <span>Resistor</span>
           </div>
+          <button onClick={logInfo}>info</button>
         </div>
       </div>
     </div>
