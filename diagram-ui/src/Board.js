@@ -3,19 +3,31 @@
 // =======================================================================
 
 export const ElementTypes = {
-  fuse: "_fuse",
-  switch: "_switch",
-  bulb: "_bulb",
-  wire: "_wire",
-  battery: "_battery",
-  resistor: "_resistor",
+  fuse: "__fuse__",
+  switch: "__switch__",
+  bulb: "__bulb__",
+  wire: "__wire__",
+  battery: "__battery__",
+  resistor: "__resistor__",
 };
+
+export const Side = {
+  left: "__left__",
+  right: "__right__",
+  undefined: "__undefined__",
+};
+
 // =======================================================================
 // >>  ElementTypes
 // =======================================================================
 
 export class Element {
-  constructor(gridX, gridY, type) {
+  constructor(gridX, gridY, type, ID) {
+    if (ID) {
+      this.id = ID;
+    } else {
+      console.error("[ ERROR ]: couldn't generate element without ID!");
+    }
     this.id = 0;
     this.gridX = gridX;
     this.gridY = gridY;
@@ -94,17 +106,25 @@ export class Element {
 //                - This has to be visualized properly!
 
 export class Wire {
-  constructor(startGridX, startGridY, startTerminalDir, beginElem = null) {
+  constructor(
+    startGridX,
+    startGridY,
+    startTerminalDir = Side.undefined,
+    beginElem = null,
+  ) {
     this.segments = [
       { x: startGridX, y: startGridY, terminal: startTerminalDir },
     ];
     this.isComplete = false;
     this.beginElement = beginElem;
+    this.beginElementSide = startTerminalDir;
     this.endElement = null;
+    this.endElementSide = Side.undefined;
   }
 
-  addEndElement(elemn) {
+  addEndElement(elemn, side = Side.undefined) {
     this.endElement = elemn;
+    this.endElementSide = side;
   }
 
   addSegment(x, y, terminal = null) {
@@ -122,9 +142,12 @@ export class Wire {
     }
   }
 
-  complete(endTerm, elem) {
+  complete(endTerm, elem, side = Side.undefined) {
     if (endTerm) this.segments[this.segments.length - 1].terminal = endTerm;
-    if (elem) this.endElement= elem;
+    if (elem) {
+      this.endElement = elem;
+      this.endElementSide = side;
+    }
     this.isComplete = true;
   }
 
@@ -138,9 +161,9 @@ export class Wire {
     let startY = startSegment.y * cellSize + cellSize / 2;
 
     // Adjust start point based on the starting terminal
-    if (startSegment.terminal === "left") {
+    if (startSegment.terminal === Side.left) {
       startX = startSegment.x * cellSize;
-    } else if (startSegment.terminal === "right") {
+    } else if (startSegment.terminal === Side.right) {
       startX = (startSegment.x + 1) * cellSize;
     }
 
@@ -153,9 +176,9 @@ export class Wire {
 
       // Adjust end point for the last segment
       if (i === this.segments.length - 1) {
-        if (segment.terminal === "left") {
+        if (segment.terminal === Side.left) {
           endX = segment.x * cellSize;
-        } else if (segment.terminal === "right") {
+        } else if (segment.terminal === Side.right) {
           endX = (segment.x + 1) * cellSize;
         }
       }
@@ -173,6 +196,7 @@ export class Wire {
 
 export class Board {
   constructor(canvas, assetManager) {
+    this.nextElementId = 1;
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.assetManager = assetManager;
@@ -181,7 +205,7 @@ export class Board {
     this.clickOffsetY = 0;
     this.draggableElement = null;
     this.lastSelectedElement = null;
-    this.selectedElementToBeDrawn = ElementTypes.fuse;
+    this.selectedElementToBeDrawnType = ElementTypes.fuse;
 
     this.cellSize = Math.max(canvas.width, canvas.height) / 20;
     this.gridWidth = Math.floor(canvas.width / this.cellSize);
@@ -210,7 +234,7 @@ export class Board {
   }
 
   logInfo() {
-    console.log(this.lastSelectedElement.getConnectedElements());
+    console.log(this.lastSelectedElement);
   }
 
   getMousePosition(event) {
@@ -244,24 +268,17 @@ export class Board {
     }
   }
 
-  handleWireCennections(wire) {
+  handleWireCennections(wire, endTerminal) {
     const beginElem = wire.beginElement;
     const endElem = wire.endElement;
-    console.log(beginElem, endElem);
-    if (beginElem && endElem) {
-      if (beginElem.gridX < endElem.gridX) {
-        beginElem.connectedElements.rightElems.push(endElem);
-        endElem.connectedElements.leftElems.push(beginElem);
-      } else if (beginElem.gridX > endElem.gridX) {
-        beginElem.connectedElements.leftElems.push(endElem);
-        endElem.connectedElements.rightElems.push(beginElem);
-      } else if (beginElem.gridY < endElem.gridY) {
-        beginElem.connectedElements.rightElems.push(endElem);
-        endElem.connectedElements.leftElems.push(beginElem);
-      } else if (beginElem.gridY > endElem.gridY) {
-        beginElem.connectedElements.leftElems.push(endElem);
-        endElem.connectedElements.rightElems.push(beginElem);
-      }
+    if (endTerminal === Side.left) {
+      endElem.connectedElements.leftElems.push(endElem);
+      beginElem.connectedElements.rightElems.push(beginElem);
+    }
+
+    if (endTerminal === Side.right) {
+      beginElem.connectedElements.leftElems.push(endElem);
+      endElem.connectedElements.rightElems.push(beginElem);
     }
   }
 
@@ -279,7 +296,7 @@ export class Board {
     if (clickedElement) {
       if (clickedElement.isClickedOnLeftTerminal(x, y, this.cellSize, 20)) {
         this.isDrawingWire = true;
-        this.currentWire = new Wire(gridX, gridY, "left", clickedElement);
+        this.currentWire = new Wire(gridX, gridY, Side.left, clickedElement);
         this.lastWireGridX = gridX;
         this.lastWireGridY = gridY;
         return;
@@ -287,7 +304,7 @@ export class Board {
         clickedElement.isClickedOnRightTerminal(x, y, this.cellSize, 20)
       ) {
         this.isDrawingWire = true;
-        this.currentWire = new Wire(gridX, gridY, "right", clickedElement);
+        this.currentWire = new Wire(gridX, gridY, Side.right, clickedElement);
         this.lastWireGridX = gridX;
         this.lastWireGridY = gridY;
         return;
@@ -327,9 +344,10 @@ export class Board {
       const newElement = new Element(
         gridX,
         gridY,
-        this.selectedElementToBeDrawn,
-        this.assetManager,
+        this.selectedElementToBeDrawnType,
+        this.nextElementId,
       );
+      this.nextElementId = this.nextElementId + 1;
       this.addElement(newElement);
     }
   }
@@ -347,15 +365,15 @@ export class Board {
       if (element) {
         let endTerminal = null;
         if (element.isClickedOnLeftTerminal(x, y, this.cellSize, 20)) {
-          endTerminal = "left";
+          endTerminal = Side.left;
         } else if (element.isClickedOnRightTerminal(x, y, this.cellSize, 20)) {
-          endTerminal = "right";
+          endTerminal = Side.right;
         }
 
         if (endTerminal) {
           this.currentWire.addSegment(gridX, gridY, endTerminal);
           this.currentWire.complete(endTerminal, element);
-          this.handleWireCennections(this.currentWire);
+          this.handleWireCennections(this.currentWire, endTerminal);
           this.wires.push(this.currentWire);
           this.currentWire = null;
           this.isDrawingWire = false;
@@ -416,7 +434,7 @@ export class Board {
   }
 
   setSelectedElementToBeDrawn(type) {
-    this.selectedElementToBeDrawn = type;
+    this.selectedElementToBeDrawnType = type;
   }
 
   draw() {
