@@ -28,7 +28,6 @@ export class Element {
     } else {
       console.error("[ ERROR ]: couldn't generate element without ID!");
     }
-    this.id = 0;
     this.gridX = gridX;
     this.gridY = gridY;
     this.type = type;
@@ -271,9 +270,10 @@ export class Board {
   handleWireCennections(wire, endTerminal) {
     const beginElem = wire.beginElement;
     const endElem = wire.endElement;
+    console.log(beginElem, endElem);
     if (endTerminal === Side.left) {
-      endElem.connectedElements.leftElems.push(endElem);
-      beginElem.connectedElements.rightElems.push(beginElem);
+      endElem.connectedElements.leftElems.push(beginElem);
+      beginElem.connectedElements.rightElems.push(endElem);
     }
 
     if (endTerminal === Side.right) {
