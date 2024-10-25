@@ -17,6 +17,12 @@ export const Side = {
   undefined: "__undefined__",
 };
 
+export const Terminal = {
+  positive: "__positive__",
+  negative: "__negative__",
+  undefined: "__undefined__",
+};
+
 // =======================================================================
 // >>  ElementTypes
 // =======================================================================
@@ -32,10 +38,45 @@ export class Element {
     this.gridY = gridY;
     this.type = type;
     this.isSelected = false;
-    this.connectedElements = {
-      leftElems: [],
-      rightElems: [],
+    this.terminals = {
+      left: {
+        type: Terminal.undefined,
+        connections: [],
+      },
+      right: {
+        type: Terminal.undefined,
+        connections: [],
+      },
     };
+
+    this.initializeTerminals();
+  }
+
+  initializeTerminals() {
+    switch (this.type) {
+      case ElementTypes.battery:
+        this.terminals.left.type = Terminal.negative;
+        this.terminals.right.type = Terminal.positive;
+        break;
+      case ElementTypes.resistor:
+        // These components are bidirectional
+        this.terminals.left.type = Terminal.undefined;
+        this.terminals.right.type = Terminal.undefined;
+        break;
+      default:
+        this.terminals.left.type = Terminal.undefined;
+        this.terminals.right.type = Terminal.undefined;
+    }
+  }
+
+  addConnection(element, side) {
+    if (side === Side.left) {
+      this.terminals.left.connections.push(element);
+    } else if (side === Side.right) {
+      this.terminals.right.connections.push(element);
+    } else {
+      console.error("[ ERROR ]: Couldn't add connection to element!");
+    }
   }
 
   draw(ctx, cellSize, assetMannager) {
@@ -86,12 +127,8 @@ export class Element {
     this.gridY = gridY;
   }
 
-  connectTo(element) {
-    this.connectedElements.push(element);
-  }
-
-  getConnectedElements() {
-    return this.connectedElements;
+  getConnections() {
+    return this.terminals;
   }
 }
 
@@ -99,8 +136,7 @@ export class Element {
 // >> WIRE CLASS
 // =======================================================================
 
-// TODO: > Populate the connectedElements array properly
-//       > Deletion of wires
+// TODO: > Deletion of wires
 //       > Wires should be allowed to pass over other of their kind without connections
 //                - This has to be visualized properly!
 
@@ -258,27 +294,28 @@ export class Board {
     const leftElem = this.getElement(x - 1, y);
     const rightElem = this.getElement(x + 1, y);
     if (leftElem) {
-      elem.connectedElements.leftElems.push(leftElem);
-      leftElem.connectedElements.rightElems.push(elem);
+      console.log(leftElem);
+      elem.addConnection(leftElem, Side.left);
+      leftElem.addConnection(elem, Side.right);
     }
     if (rightElem) {
-      elem.connectedElements.rightElems.push(rightElem);
-      rightElem.connectedElements.leftElems.push(elem);
+      console.log(rightElem);
+      elem.addConnection(rightElem, Side.right);
+      rightElem.addConnection(elem, Side.left);
     }
   }
 
   handleWireCennections(wire, endTerminal) {
     const beginElem = wire.beginElement;
     const endElem = wire.endElement;
-    console.log(beginElem, endElem);
     if (endTerminal === Side.left) {
-      endElem.connectedElements.leftElems.push(beginElem);
-      beginElem.connectedElements.rightElems.push(endElem);
+      endElem.addConnection(beginElem, Side.left);
+      beginElem.addConnection(endElem, Side.right);
     }
 
     if (endTerminal === Side.right) {
-      beginElem.connectedElements.leftElems.push(endElem);
-      endElem.connectedElements.rightElems.push(beginElem);
+      beginElem.addConnection(endElem, Side.left);
+      endElem.addConnection(beginElem, Side.right);
     }
   }
 
